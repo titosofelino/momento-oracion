@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Momento de Oración</title>
+    <!-- Iconos para la pantalla de inicio y navegadores (Usando un archivo local) -->
+    <link rel="apple-touch-icon" href="icono.png">
+    <link rel="icon" href="icono.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Merriweather', serif;
+        }
+        .font-handwriting {
+            font-family: 'Caveat', cursive;
+        }
+        .scroll-container {
+            transition: transform 0.3s ease-in-out;
+        }
+        .scroll-container:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- Modal (Pop-up) Styles --- */
+        .modal {
+            display: none; position: fixed; z-index: 50; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; 
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center; align-items: center;
+            animation: fadeInModal 0.5s ease-in-out;
+        }
+        .modal-content {
+            background-color: #fdf5e6; margin: auto; padding: 2rem 1.5rem;
+            border: 2px solid #d2b48c; width: 90%; max-width: 600px;
+            max-height: 90vh; border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+            position: relative; overflow-y: auto;
+            animation: slideInModal 0.5s ease-in-out;
+        }
+        .close-button {
+            position: absolute; top: 10px; right: 20px;
+            color: #aaa; font-size: 28px; font-weight: bold;
+            transition: color 0.3s;
+        }
+        .close-button:hover, .close-button:focus {
+            color: #333; text-decoration: none; cursor: pointer;
+        }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInModal {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* --- View Transition Styles --- */
+        .view-transition-out { animation: fadeOutView 0.6s ease-in-out forwards; }
+        .view-transition-in { animation: fadeInView 0.6s ease-in-out forwards; }
+        @keyframes fadeOutView { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes fadeInView { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- Side Menu Styles --- */
+        #side-menu {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(-100%);
+        }
+        #side-menu.open {
+            transform: translateX(0);
+        }
+        #menu-overlay {
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+        #menu-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 overflow-hidden">
+
+    <!-- Sello del Opus Dei de fondo -->
+    <div class="fixed inset-0 z-0 flex items-center justify-center">
+        <svg class="w-2/3 h-2/3 md:w-1/2 md:h-1/2 text-gray-300" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M50 2 V 98 M11 35 H 89" stroke="currentColor" stroke-width="2.5"/>
+        </svg>
+    </div>
+    
+    <!-- Botón de Menú Hamburguesa -->
+    <button id="menu-button" class="fixed top-4 left-4 z-40 text-gray-700 p-2 rounded-md bg-white/50 backdrop-blur-sm">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+
+    <!-- Menú Lateral -->
+    <div id="menu-overlay" class="fixed inset-0 bg-black/50 z-40"></div>
+    <div id="side-menu" class="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-6 z-50 shadow-lg">
+        <h2 class="font-handwriting text-3xl mb-8">Menú</h2>
+        <nav>
+            <a href="#" id="show-news-button" class="block py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Noticias para rezar</a>
+        </nav>
+    </div>
+
+    <!-- Contenedor principal -->
+    <main id="main-content" class="relative z-10 w-full max-w-5xl mx-auto p-4 min-h-screen flex flex-col justify-center items-center">
+        
+        <!-- Vista Inicial: Botón de Oración -->
+        <div id="initial-view" class="text-center w-full">
+            <h1 class="text-3xl md:text-5xl font-bold text-gray-700 mb-4">Momento de Oración</h1>
+            <p class="text-gray-600 mb-8">Pulsa en la Biblia para comenzar.</p>
+            <button id="pray-button" class="group transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95 bg-transparent border-none">
+                <svg class="w-32 h-32 md:w-40 md:h-40 text-gray-800" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="bible-closed" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M25 10 H 75 V 90 H 25 Z" fill="#6b4f2b" /><path d="M25 10 H 20 V 90 H 25 Z" fill="#5a4022" /><path d="M75 12 V 88 H 78 V 12 Z" fill="#fdf5e6" stroke="#d2b48c" /><path d="M48 30 V 50 M 40 40 H 56" stroke="#e1c699" stroke-width="3"/></g>
+                    <g id="bible-open" class="hidden" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15 C 20 10, 80 10, 90 15 L 90 85 C 80 90, 20 90, 10 85 Z" fill="#6b4f2b" /><path d="M50 18 V 87" fill="none" stroke="#a07c4d" /><path d="M50 18 C 25 22, 15 30, 15 85" fill="#fdf5e6" stroke="#d2b48c" /><path d="M50 18 C 75 22, 85 30, 85 85" fill="#fdf5e6" stroke="#d2b48c" /></g>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Vista de Resultados: Manuscritos Enrollados -->
+        <div id="results-view" class="hidden w-full text-center">
+            <div class="flex flex-col justify-center items-center gap-8">
+                <div id="scroll-meditar" class="scroll-container cursor-pointer text-center"><svg class="w-48 h-24" viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20 C0 20, 0 60, 10 60 H 150 C160 60, 160 20, 150 20 H 10 Z" fill="#fdf5e6" stroke="#d2b48c" stroke-width="4"/><path d="M10 20 C20 20, 20 60, 10 60" fill="#d2b48c"/><path d="M150 20 C140 20, 140 60, 150 60" fill="#d2b48c"/><rect x="45" y="25" width="70" height="30" fill="#c6a67b" rx="5"/><path d="M80 15 V 65" stroke="#b08d57" stroke-width="6" stroke-linecap="round"/></svg><h2 class="font-handwriting text-3xl text-amber-900 mt-2">Para meditar</h2></div>
+                <div id="scroll-rezar" class="scroll-container cursor-pointer text-center"><svg class="w-48 h-24" viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 20 C0 20, 0 60, 10 60 H 150 C160 60, 160 20, 150 20 H 10 Z" fill="#fdf5e6" stroke="#d2b48c" stroke-width="4"/><path d="M10 20 C20 20, 20 60, 10 60" fill="#d2b48c"/><path d="M150 20 C140 20, 140 60, 150 60" fill="#d2b48c"/><rect x="45" y="25" width="70" height="30" fill="#a1b1c1" rx="5"/><path d="M80 15 V 65" stroke="#7e8a97" stroke-width="6" stroke-linecap="round"/></svg><h2 class="font-handwriting text-3xl text-sky-900 mt-2">Para rezar</h2></div>
+            </div>
+             <div class="text-center mt-12"><button id="pray-again-button" class="bg-gray-700 text-white px-8 py-3 rounded-lg shadow-md hover:bg-gray-800 transition-all duration-300">Volver</button></div>
+        </div>
+    </main>
+
+    <!-- Vista de Noticias -->
+    <div id="news-view" class="hidden fixed inset-0 bg-gray-100 z-20 p-4 pt-20 pb-20 overflow-y-auto">
+        <header class="fixed top-0 left-0 right-0 flex items-center justify-center p-4 border-b bg-gray-100/80 backdrop-blur-sm z-30">
+            <h1 class="font-handwriting text-4xl text-gray-800">Noticias para rezar</h1>
+        </header>
+        <div id="news-container" class="space-y-4 max-w-3xl mx-auto">
+            <!-- Las noticias se insertarán aquí dinámicamente -->
+        </div>
+        <button id="back-to-main-button" class="fixed bottom-4 left-4 z-30 bg-gray-700 text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+        </button>
+    </div>
+
+
+    <!-- Modal para "Para Meditar" -->
+    <div id="meditar-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-meditar">&times;</span>
+            <h2 class="font-handwriting text-4xl text-amber-900 border-b border-amber-800 pb-2 mb-6">Para meditar:</h2>
+            <blockquote id="quote-text" class="text-xl italic"></blockquote>
+            <p id="quote-author" class="text-right mt-6 font-bold text-amber-800"></p>
+        </div>
+    </div>
+
+    <!-- Modal para "Para Rezar" -->
+    <div id="rezar-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-rezar">&times;</span>
+            <div class="relative flex items-center border-b border-sky-800 pb-2 mb-6">
+                <a id="intention-link" href="#" target="_blank" rel="noopener noreferrer" class="absolute -top-1 left-0 text-sky-700 hover:text-sky-900 transition-colors" title="Ver fuente" style="display: none;"><svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg></a>
+                <h2 id="rezar-title" class="font-handwriting text-4xl text-sky-900">Para rezar:</h2>
+            </div>
+            <p id="intention-text" class="text-xl"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- MASTER LISTS (DO NOT CHANGE) ---
+        const masterQuotes = [
+            { text: "El Señor es mi pastor, nada me falta.", author: "Salmo 23,1" },
+            { text: "Aunque ande en valle de sombra de muerte, no temeré mal alguno, porque tú estarás conmigo.", author: "Salmo 23,4" },
+            { text: "Confía en el Señor de todo corazón, y no en tu propia inteligencia.", author: "Proverbios 3,5-6" },
+            { text: "El Señor es mi luz y mi salvación, ¿a quién temeré?", author: "Salmo 27,1" },
+            { text: "Los que esperan en el Señor renovarán sus fuerzas; levantarán las alas como águilas.", author: "Isaías 40,31" },
+            { text: "No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo.", author: "Isaías 41,10" },
+            { text: "Venid a mí todos los que estáis trabajados y cargados, y yo os haré descansar.", author: "Mateo 11,28" },
+            { text: "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.", author: "Juan 3,16" },
+            { text: "Todo lo puedo en Cristo que me fortalece.", author: "Filipenses 4,13" },
+            { text: "Yo soy el camino, la verdad y la vida; nadie viene al Padre sino por mí.", author: "Juan 14,6" },
+            { text: "Pedid, y se os dará; buscad, y hallaréis; llamad, y se os abrirá.", author: "Mateo 7,7" },
+            { text: "El que no ama no ha conocido a Dios, porque Dios es amor.", author: "1 Juan 4,8" },
+            { text: "La fe es la certeza de lo que se espera, la convicción de lo que no se ve.", author: "Hebreos 11,1" },
+            { text: "Porque donde están dos o tres congregados en mi nombre, allí estoy yo en medio de ellos.", author: "Mateo 18,20" },
+            { text: "Tarde te amé, hermosura tan antigua y tan nueva, tarde te amé.", author: "San Agustín" },
+            { text: "Ama y haz lo que quieras.", author: "San Agustín"},
+            { text: "Reza como si todo dependiera de Dios. Trabaja como si todo dependiera de ti.", author: "San Agustín" },
+            { text: "La oración es un impulso del corazón, una sencilla mirada lanzada hacia el cielo.", author: "Santa Teresita de Lisieux" },
+            { text: "No tengáis miedo de mirarle a Él. Mirad al Señor.", author: "San Juan Pablo II" },
+            { text: "Que nada te turbe, nada te espante; todo se pasa, Dios no se muda.", author: "Santa Teresa de Ávila" },
+            { text: "Para un apóstol moderno, una hora de estudio es una hora de oración.", author: "San Josemaría Escrivá" },
+            { text: "Comienza haciendo lo que es necesario, después lo que es posible y de repente estarás haciendo lo imposible.", author: "San Francisco de Asís" },
+            { text: "Si juzgas a la gente, no tienes tiempo para amarla.", author: "Santa Teresa de Calcuta" },
+            { text: "Si quieres convertir al mundo, conviértete primero a ti mismo.", author: "San Ignacio de Loyola" },
+            { text: "Ten paciencia con todas las cosas, pero sobre todo contigo mismo.", author: "San Francisco de Sales" },
+            { text: "Sed fuertes y valientes; no temáis, porque el Señor vuestro Dios está con vosotros dondequiera que vayáis.", author: "Josué 1,9" },
+			{ text: "El amor es paciente, es bondadoso; no tiene envidia, ni se jacta, ni se engríe.", author: "1 Corintios 13,4" },
+			{ text: "Bienaventurados los que lloran, porque ellos serán consolados.", author: "Mateo 5,4" },
+			{ text: "Buscad primero el Reino de Dios y su justicia, y todo lo demás se os dará por añadidura.", author: "Mateo 6,33" },
+			{ text: "El Señor está cerca de los que tienen el corazón quebrantado.", author: "Salmo 34,18" },
+			{ text: "Mi gracia te basta, porque mi poder se perfecciona en la debilidad.", author: "2 Corintios 12,9" },
+			{ text: "No te dejes vencer por el mal; al contrario, vence el mal con el bien.", author: "Romanos 12,21" },
+			{ text: "El que quiera ser el primero entre vosotros, que sea el servidor de todos.", author: "Marcos 10,44" },
+			{ text: "Yo estoy con vosotros todos los días, hasta el fin del mundo.", author: "Mateo 28,20" },
+			{ text: "El que me sigue no camina en tinieblas, sino que tendrá la luz de la vida.", author: "Juan 8,12" },
+			{ text: "La medida del amor es amar sin medida.", author: "San Agustín" },
+			{ text: "Dios no manda cosas imposibles, pero al mandar lo que manda te invita a hacer lo que puedas y a pedir lo que no puedas.", author: "San Agustín" },
+			{ text: "Cristo no quita nada, y lo da todo.", author: "Benedicto XVI" },
+			{ text: "El mundo os promete comodidad, pero no fuisteis creados para la comodidad, sino para la grandeza.", author: "Benedicto XVI" },
+			{ text: "El amor se acrecienta dándolo a los demás.", author: "San Juan Pablo II" },
+			{ text: "La santidad no consiste en hacer cosas extraordinarias, sino en hacer las ordinarias con amor.", author: "Santa Teresa de Calcuta" },
+			{ text: "Donde no hay amor, pon amor, y sacarás amor.", author: "San Juan de la Cruz" },
+			{ text: "La perfección no consiste en la multiplicidad de cosas hechas, sino en el amor con que se hacen.", author: "San Francisco de Sales" },
+			{ text: "El que no vive para servir, no sirve para vivir.", author: "Santa Teresa de Calcuta" },
+			{ text: "Quien pierde su vida por mí, la encontrará.", author: "Mateo 16,25" },
+			{ text: "No podemos ser cristianos a medias. El Evangelio lo pide todo.", author: "Papa Francisco" },
+			{ text: "El Espíritu Santo es el alma de la Iglesia.", author: "San Juan Pablo II" },
+			{ text: "Rezar el Rosario es contemplar con María el rostro de Cristo.", author: "San Juan Pablo II" },
+			{ text: "Dios no se cansa nunca de perdonarnos, somos nosotros los que nos cansamos de pedirle perdón.", author: "Papa Francisco" },
+			{ text: "La fe crece cuando se vive como experiencia de amor recibido y cuando se comunica como experiencia de gracia y alegría.", author: "Benedicto XVI" },
+            { text: "El Señor peleará por vosotros; vosotros estad tranquilos.", author: "Éxodo 14,14" },
+			{ text: "El que habita al abrigo del Altísimo morará bajo la sombra del Omnipotente.", author: "Salmo 91,1" },
+			{ text: "Dichosos los que trabajan por la paz, porque ellos serán llamados hijos de Dios.", author: "Mateo 5,9" },
+			{ text: "Sean fuertes y cobren ánimo todos los que esperan en el Señor.", author: "Salmo 31,24" },
+			{ text: "El Señor cumplirá en mí su propósito; su amor es eterno.", author: "Salmo 138,8" },
+			{ text: "Porque para Dios nada hay imposible.", author: "Lucas 1,37" },
+			{ text: "Guarda silencio ante el Señor y espera en Él.", author: "Salmo 37,7" },
+			{ text: "La lámpara del cuerpo es el ojo; si tu ojo es sano, todo tu cuerpo estará lleno de luz.", author: "Mateo 6,22" },
+			{ text: "El fruto del Espíritu es amor, alegría, paz, paciencia, amabilidad, bondad, fidelidad, humildad y dominio propio.", author: "Gálatas 5,22-23" },
+			{ text: "Sed siempre alegres, orad sin cesar y dad gracias en toda circunstancia.", author: "1 Tesalonicenses 5,16-18" },
+			{ text: "No hay amor más grande que dar la vida por los amigos.", author: "Juan 15,13" },
+			{ text: "La cruz no es el final, sino el comienzo de la gloria.", author: "San Juan Pablo II" },
+			{ text: "Solo el amor convierte las cruces en resurrecciones.", author: "San Josemaría Escrivá" },
+			{ text: "Cuando se ama de verdad, el alma canta incluso entre lágrimas.", author: "Santa Teresa de Lisieux" },
+			{ text: "La medida del amor es el sacrificio.", author: "San Maximiliano Kolbe" },
+			{ text: "El sufrimiento sin amor es insoportable; el amor sin sufrimiento no existe.", author: "San Pío de Pietrelcina" },
+			{ text: "La alegría es el signo infalible de la presencia de Dios.", author: "San Francisco de Sales" },
+			{ text: "Dios nos ama tal como somos, pero nos ama demasiado para dejarnos así.", author: "Papa Francisco" },
+			{ text: "Cristo cuenta contigo, no te rindas, Él no te abandona nunca.", author: "San Juan Pablo II" },
+			{ text: "El amor verdadero comienza cuando no se espera nada a cambio.", author: "Santa Teresa de Calcuta" },
+			{ text: "El que reza se salva; el que no reza, se condena.", author: "San Alfonso María de Ligorio" },
+			{ text: "La vida es tiempo para amar y ser amado.", author: "Papa Francisco" },
+			{ text: "Cuanto más se ama, más se desea sufrir por el amado.", author: "Santa Teresa de Jesús" },
+			{ text: "Dios no elige a los capacitados, capacita a los que elige.", author: "San Juan Bosco" },
+			{ text: "No hay santo sin pasado, ni pecador sin futuro.", author: "San Agustín" },
+            { text: "Haz de tu vida un continuo acto de amor.", author: "San Josemaría Escrivá" },
+			{ text: "No olvides que Dios te ha llamado a la santidad en medio del mundo.", author: "San Josemaría Escrivá" },
+			{ text: "Ama mucho, trabaja mucho y reza mucho, y la santidad llegará.", author: "San Josemaría Escrivá" },
+			{ text: "Convierte tu trabajo en oración y tu vida ordinaria en camino hacia Dios.", author: "San Josemaría Escrivá" },
+			{ text: "No hay santidad sin humildad ni humildad sin oración.", author: "San Josemaría Escrivá" },
+			{ text: "El secreto de la santidad está en hacer todas las cosas con amor.", author: "San Josemaría Escrivá" },
+			{ text: "Cada acto ordinario hecho por amor a Dios se convierte en extraordinario.", author: "San Josemaría Escrivá" },
+			{ text: "No te conformes con menos de lo que Dios quiere de ti.", author: "San Josemaría Escrivá" },
+			{ text: "Cristo te llama a la santidad desde el lugar donde estás.", author: "San Josemaría Escrivá" },
+			{ text: "Sé santo, no por lo que haces, sino por lo que eres en Dios.", author: "San Josemaría Escrivá" },
+			{ text: "El camino a la santidad está lleno de detalles pequeños pero llenos de amor.", author: "San Josemaría Escrivá" },
+			{ text: "La oración debe ser continua, como el respirar del alma.", author: "San Josemaría Escrivá" },
+
+        ];
+
+        const masterIntentions = [
+            { text: "Te suplicamos por el pastor Ezra Jin Mingri, perseguido por su fe, detenido en China por cargos de “uso ilegal de redes de información”.", link: "https://www.reuters.com/world/china/china-detains-dozens-underground-church-pastors-crackdown-2025-10-13/", title: "Pastores de una Iglesia en China son detenidos por su fe", imageKeyword: "China" },
+            { text: "Clamamos por la hermana cristiana Hakuri en Níger, que vivió ataques extremistas que destruyeron su hogar.", link: "https://www.opendoorsus.org/en-US/stories/christian-persecution-in-niger-one-widow%27s-story-of-faith-amid-violence/", title: "Ataques extremistas a Hakuri, una cristiana en Níger", imageKeyword: "Niger"},
+            { text: "Te pedimos también por Adam, en Camerún, secuestrado dos veces por Boko Haram por ser cristiano: “Él vio la intervención de Dios”. Que su testimonio inspire valor en los creyentes perseguidos.", link: "https://www.opendoorsuk.org/news/latest-news/cameroon-christian-adam/", title: "Adam, en Camerún, secuestrado dos veces por Boko Haram por ser cristiano", imageKeyword: "Camerún" },
+            { text: "Oramos por los cristianos en Nigeria: más de 7.000 habrían sido asesinados en los primeros 220 días de 2025.", link: "https://www.newsweek.com/christians-killed-nigeria-religion-2116416", title: "Más de 7000 asesinatos a cristianos en menos de 220 en Nigeria", imageKeyword: "Nigeria"},
+            { text: "Señor, te pedimos por los conversos en Irán que están siendo encarcelados por su fe.", link: "https://persecution.org/2025/10/10/5-christians-in-iran-to-spend-several-years-in-prison-for-their-faith/", title: "Conversos en Irán están siendo encarcelados por su fe", imageKeyword: "Irán" },
+            { text: "Te rogamos por Abdul Rahman, hombre afgano condenado por apostasía tras convertirse al cristianismo.", link: "https://en.wikipedia.org/wiki/Abdul_Rahman_%28convert%29", title: "Abdul Rahman, afgano condenado por apostasía tras convertirse al cristianismo", imageKeyword: "Afganistán" },
+            { text: "Te suplicamos por comunidades cristianas en Pakistán afectadas por ataques a iglesias, como los incendios en Jaranwala en 2023.", link: "https://en.wikipedia.org/wiki/Jaranwala_church_arsons", title: "Quema y destrucción de 26 iglesias cristianas en Jaranwala, Punjab y Pakistán en 2023", imageKeyword: "Pakistan" },
+            { text: "Según datos recientes, el 75 % de los hombres cristianos y el 40 % de las mujeres cristianas admiten ver pornografía en algún grado. Que aquellos que luchan con esa adicción sean liberados por tu poder.", link: "https://puredesire.org/blog/the-latest-stats-on-pornography-and-why-they-matter/", title: "El 75 % de los hombres cristianos y el 40 % de las mujeres cristianas admiten ver pornografía", imageKeyword: "Mundo" },
+            { text: "Señor, pedimos por las últimas cifras del aborto en España: en 2023 se registraron 103.097 abortos. Que nazca una cultura de vida y que muchas mujeres encuentren apoyo para elegir la vida.", link: "https://catholicreview.org/spanish-government-wants-to-create-blacklists-of-doctors-who-refuse-to-perform-abortions/", title: "En España, en 2023, se registraron 103.097 abortos", imageKeyword: "España" },
+            { text: "Oramos por leyes justas que protejan al no nacido. Según obispos españoles, desde 1985 se han producido más de 2,5 millones de abortos voluntarios en España.", link: "https://www.osvnews.com/spanish-church-rallies-catholics-against-demographic-winter-of-abortion/", title: "Desde 1985 se han producido más de 2,5 millones de abortos voluntarios en España", imageKeyword: "España" },
+            { text: "Oramos por los cristianos de Taybeh (Cisjordania), comunidad que enfrenta violencia, restricciones y emigración forzada, para que su presencia se mantenga con fuerza.", link: "https://apnews.com/article/912c4f0ea073d8f091e762f1466a7423", title: "Cristianos en Cisjordania enfrentan violencia, restricciones y emigración forzada", imageKeyword: "Cisjordania" },
+            { text: "Pedimos por Nigeria: que el ciclo de asesinatos, secuestros y destrucción de iglesias termine.", link: "https://www.washingtonpost.com/opinions/2025/10/10/persecution-christians-nigeria/", title: "Asesinatos, secuestros y destrucciòn de iglesias en Nigeria", imageKeyword: "Nigeria" },
+            { text: "Oramos por las víctimas del masacre de Kasanga, en RD del Congo, donde al menos 70 cristianos fueron secuestrados y decapitados dentro de una iglesia.", link: "https://en.wikipedia.org/wiki/Kasanga_massacre", title: "70 cristianos fueron secuestrados y decapitados dentro de una iglesia en el Congo", imageKeyword: "RD Congo" },
+            { text: "Pedimos por las jóvenes españolas menores de 20 años, que representan casi el 11 % de los abortos en España en 2024, para que reciban apoyo y opciones diferentes.", link: "https://www.theolivepress.es/spain-news/2025/10/01/abortions-in-spain-rose-by-3-in-2024-with-women-under-20-accounting-for-a-tenth-of-terminations/", title: "El 11 % de los abortos en España en 2024 fueron mujeres jóvenes menores de 20 años", imageKeyword: "España" },
+            { text: "Pedimos por Hesamoddin (Yahya) Mohammadi Junidi, converso al cristianismo en Irán, sentenciado a más de 8 años de prisión por “propaganda contra la ley islámica”.", link: "https://hengaw.net/en/news/2025/09/article-121-1", title: "Converso al cristianismo en Irán sentenciado a más de 8 años de prisión", imageKeyword: "Irán" },
+            { text: "Oramos por Mehrdad Shamlooee, Abbas Soori y Narges Naseri, condenados en Irán a un total de 41 años y 8 meses por actividades cristianas.", link: "https://hengaw.net/en/news/2025/03/article-42", title: "Mehrdad Shamlooee, Abbas Soori y Narges Naseri, condenados en Irán a un total de 41 años y 8 meses por actividades cristianas", imageKeyword: "Irán" },
+            { text: "Pedimos por Morteza (Kalvin) Faghanpour‑Sasi, condenado en Varamin a 8 años y 11 meses por distribuir literatura cristiana.", link: "https://hengaw.net/en/news/2025/09/article-151", title: "Kalvin Faghanpour‑Sasi, condenado en Varamin a 8 años y 11 meses por distribuir literatura cristiana", imageKeyword: "Irán" },
+            { text: "Oramos por Yasin Mousavi, converso al cristianismo en Irán, sentenciado a 15 años por promover el cristianismo.", link: "https://iranwire.com/en/religious-minorities/130723-iran-court-hands-christian-convert-15-years-in-prison/", title: "Yasin Mousavi, converso al cristianismo sentenciado a 15 años en Irán", imageKeyword: "Irán" },
+            { text: "Pedimos por Mansour y Mahmoud Mardani, hermanos conversos en Irán, con 4 años de cárcel cada uno por celebrar culto en casa.", link: "https://iranwire.com/en/religious-minorities/140006-christian-convert-brothers-sentenced-to-prison-in-iran/", title: "Mansour y Mahmoud Mardani, condenados a 4 años de cárcel cada uno por celebrar culto en casa", imageKeyword: "Irán" },
+            { text: "Oramos por España, donde en 2024 se registraron 106.172 abortos, el número más alto en más de una década.", link: "https://evangelicalfocus.com/europe/32732/spain-records-106172-abortions-the-highest-figure-in-more-than-a-decade", title: "En España en 2024 se registraron 106.172 abortos, el número más alto en más de una década", imageKeyword: "España" },
+            { text: "Pedimos por Francia, para que la legalización de la “ayuda para morir” no desproteja la dignidad humana hasta el final.", link: "https://www.theguardian.com/world/2025/may/27/french-parliament-prepares-to-vote-on-legalising-assisted-dying", title: "Legalización de la “ayuda para morir” en Francia", imageKeyword: "Francia" },
+            { text: "Oramos por menores expuestos a pornografía: que los gobiernos regulen su acceso y haya supervisión parental y pastoral concreta.", link: null },
+            { text: "Pedimos por ministerios cristianos que trabajan con jóvenes adictos a la pornografía, para que tengan recursos y consejeros preparados.", link: null },
+            { text: "Oramos por madres en España que sienten presión para abortar, para que reciban alternativas reales, valentía y comunidad.", link: null },
+            { text: "Pedimos por médicos y profesionales de salud que se niegan a participar en abortos o eutanasia, para que su objeción de conciencia sea respetada.", link: null },
+            { text: "Oramos por quienes han pasado por una eutanasia impulsada por desesperación, para que encuentren sanación espiritual y consuelo.", link: null },
+            { text: "Oramos por las leyes que permiten eutanasia en países donde ya está instituida, para que se revisen y protejan más al vulnerable.", link: null },
+            { text: "Oramos por las familias en la Franja de Gaza que viven hambruna y pobreza extremos debido al bloqueo y los bombardeos, para que Dios provea alimentos, refugio y esperanza.", link: "https://apnews.com/article/palestine-gaza-war-hunger-blockade-2025-09-30", title: "Familias que viven hambruna y pobreza extremos en la Franja de Gaza", imageKeyword: "Gaza" },
+			{ text: "Pedimos por el pueblo cristiano del Yemen, donde muchos han sido desplazados por los conflictos y se enfrentan a la falta de bienes básicos.", link: "https://www.persecution.org/2025/09/20/christians-displaced-yemen-war/", title: "Desplazamientos de cristianos por los conflictos y falta de bienes básicos en Yemen", imageKeyword: "Yemen"},
+			{ text: "Oramos por las mujeres de Inglaterra y Gales: casi 30 % de los embarazos terminan en aborto según estadísticas oficiales de 2022.", link: "https://www.theguardian.com/world/2025/jul/09/number-of-abortions-in-england-and-wales-hit-record-levels-for-2022", title: "Casi 30% de los embarazos terminan en aborto según estadísticas oficiales de 2022 en Inglaterra y Gales", imageKeyword: "Inglaterra" },
+			{ text: "Pedimos por las personas con enfermedades mentales en los Países Bajos, pues aumentan los casos de eutanasia vinculados al sufrimiento psicológico.", link: "https://english.elpais.com/international/2024-04-19/debate-ignites-in-the-netherlands-over-rise-in-euthanasia-for-mental-disorders.html", title: "Aumentan los casos de eutanasia vinculados al sufrimiento psicológico por enfermedades mentales en los Países Bajos", imageKeyword: "Países Bajos" },
+			{ text: "Oramos por Ana Estrada, peruana que murió por eutanasia tras años de padecer una enfermedad degenerativa, para que su caso inspire compasión y reflexión sobre el valor de la vida.", link: "https://www.reuters.com/world/americas/peruvian-woman-dies-by-euthanasia-after-years-long-fight-dignified-death-2024-04-22/", title: "Ana Estrada, peruana que fue a juicio para poder suicidarse por eutanasia tras años de padecer una enfermedad degenerativa", imageKeyword: "Perú" },
+			{ text: "Clamamos por Noelia, de 24 años en Cataluña, cuyo derecho a la eutanasia ha llegado a los tribunales a pesar de tener el aval médico; que Dios consuele a su familia y al enfermo.", link: "https://www.ara.cat/society/first-trial-to-stop-euthanasia-an-ultra-catholic-group-takes-the-dignified-death-of-young-woman-to-court_1_5303716.html", title: "Noelia de 24 años en Cataluña exige derecho para matarse por eutanasia mientras su familia no quiere, el caso ha llegado a los tribunales", imageKeyword: "España" },
+			{ text: "Pedimos por Uruguay, primer país de América Latina mayoritariamente católico que legaliza la eutanasia por ley, para que se proteja al vulnerable.", link: "https://apnews.com/article/076a2f4d2ba5ce990e65ac4dd4798d49", title: "Uruguay, primer país de América Latina mayoritariamente católico legaliza la eutanasia", imageKeyword: "Uruguay" },
+			{ text: "Oramos por Taybeh, la última aldea cristiana íntegra en Cisjordania, amenazada por violencia de colonos, restricciones militares y emigración obligada.", link: "https://apnews.com/article/912c4f0ea073d8f091e762f1466a7423", title: "Aldea cristiana íntegra en Cisjordania, amenazada por violencia, restricciones militares y emigración obligada", imageKeyword: "Cisjordania" },
+			{ text: "Pedimos por los refugiados cristianos iraníes detenidos al llegar a EE.UU., que huían de persecución religiosa; que reciban asilo y protección.", link: "https://apnews.com/article/iranian-christians-refugees-ice-detention-2025-06", title: "Refugiados cristianos iraníes detenidos al llegar a EE.UU.", imageKeyword: "EE.UU." },
+			{ text: "Oramos por la comunidad cristiana menor en Turquía, donde se reportan ataques a iglesias, amenazas y medidas hostiles crecientes.", link: "https://www.worthynews.com/report-warns-christian-persecution-rising-in-turkey-2025-09", title: "Ataques a iglesias, amenazas y medidas hostiles crecientes a la comunidad cristiana en Turquía", imageKeyword: "Turquía" },
+			{ text: "Pedimos por la niña cristiana adolescente en Pakistán que fue secuestrada, conversionada y abusada; que Dios le sanación, justicia y restitución.", link: "https://www.worthynews.com/christian-teen-rescued-after-abduction-forced-conversion-in-pakistan-2025-08", title: "Niña cristiana adolescente en Pakistán que fue secuestrada, conversionada y abusada", imageKeyword: "Pakistán" },
+			{ text: "Oramos por aquellos que luchan contra la pornografía en el mundo digital: que existan leyes y apoyo real para proteger a los menores y sanar los corazones.", link: null },
+			{ text: "Pedimos por los jóvenes adictos a la pornografía, que Dios les de fuerza para romper cadenas, y por ministerios que les acompañen con verdad y misericordia.", link: null },
+			{ text: "Oramos por médicos españoles que objetan conciencia ante eutanasia y aborto, para que su decisión sea respetada y protegida legalmente.", link: null },
+			{ text: "Pedimos por los pobres de la República Democrática del Congo, donde millones sobreviven sin acceso a agua potable ni servicios básicos.", link: "https://www.unicef.org/drcongo/poverty-crisis",title: "Millones de pobres de la República Democrática del Congo viven sin acceso a agua potable ni servicios básicos", imageKeyword: "RD Congo" },
+			{ text: "Oramos por los hogares del Líbano que enfrentan hiperinflación: incapaces de comprar comida y medicamentos, especialmente familias cristianas vulnerables.", link: "https://reliefweb.int/report/lebanon/lebanon-crisis-thematic-analysis-vulnerability-amid-conflict-may-16-2025", title: "Crisis del Líbano: Análisis temático: Vulnerabilidad en medio del conflicto", imageKeyword: "Líbano" },
+			{ text: "Pedimos por las mujeres españolas menores de 25 años, que muchas veces sienten presión social para abortar sin recibir acompañamiento ni alternativas.", link: null },
+			{ text: "Oramos por los conversos del Islam al cristianismo en países del Medio Oriente que arriesgan su vida al abandonar la fe de nacimiento, que reciban fortaleza.", link: null },
+			{ text: "Pedimos por quienes murieron por eutanasia recientemente, para que sus almas descansen y sus familias encuentren consuelo y comprensión del misterio de la vida.", link: null },
+			{ text: "Oramos por los gobiernos latinoamericanos que enfrentan la creciente legalización del aborto y la eutanasia, para que promuevan leyes que protejan la dignidad humana desde la concepción hasta la muerte natural.", link: null },
+			{ text: "Oramos por Matthew Grech, que lleva ya años siendo juzgado en Malta por compartir su testimonio cristiano y dejar la homosexualidad tras su conversión, para que Dios lo fortalezca.", link: "https://christianconcern.com/news/christian-enters-third-year-of-conversion-practices-trial/", title: "Matthew Grech lleva ya años siendo juzgado en Malta por compartir su testimonio cristiano y dejar la homosexualidad tras su conversión", imageKeyword: "Malta" },
+			{ text: "Pedimos por Pastor Jose Pappachen y su esposa Sheeja en India, condenados por supuestas conversiones forzadas, para que la justicia revele la verdad y sean restituidos.", link: "https://www.christianpost.com/news/pastor-wife-imprisoned-on-charges-of-forced-conversion-win-bail.html", title: "Jose Pappachen y su esposa Sheeja en India, condenados por supuestas conversiones forzadas", imageKeyword: "India" },
+			{ text: "Oramos por el pastor Dominic D’Souza y su esposa en Goa, India, cuyos cargos por conversiones fueron desestimados por falta de evidencia; que su liberación sea signo de misericordia y justicia.", link: "https://www.ucanews.com/news/state-court-dismisses-conversion-case-against-indian-pastor/110413", title: "Dominic D’Souza y su esposa en Goa, India, fueron desestimados sus cargos por conversiones por falta de evidencia", imageKeyword: "India" },
+			{ text: "Pedimos por Ridvan Aydemir (“Apostate Prophet”), ex-musulmán convertido al cristianismo en 2025, que su testimonio genere esperanza para otros en situaciones similares.", link: "https://en.wikipedia.org/wiki/Ridvan_Aydemir", title: "Ridvan Aydemir (“Apostate Prophet”), ex-musulmán convertido al cristianismo en 2025", imageKeyword: "Turquía" },
+			{ text: "Oramos por Brother Dai en China, cuya fe comenzó con comidas compartidas y que pese a muchas dificultades ha permanecido firme en su compromiso cristiano.", link: "https://chinachristiandaily.com/news/china/2025-02-04/a-christian-conversion-story-started-with-free-meals--14959", title: "Brother Dai en China, su fe comenzó con comidas compartidas y pese a muchas dificultades ha permanecido firme en su compromiso cristiano", imageKeyword: "China" },
+			{ text: "Pedimos por la pareja cristiana en Uttar Pradesh, India, sentenciada bajo ley anti-conversion por supuestas conversiones, para que encuentren libertad y justicia.", link: "https://catholicconnect.in/news/christian-couple-sentenced-to-five-years-in-uttar-pradesh-for-alleged-conversion-attempts", title: "Pareja cristiana en Uttar Pradesh, India, sentenciada bajo ley anti-conversion por supuestas conversiones", imageKeyword: "India" },
+			{ text: "Oramos por los niños en Alwar, India, que residen en un hostel gestionado por misioneros cristianos y de los cuales se acusa que se les induce a la conversión; que sean protegidos y se respete su dignidad.", link: "https://timesofindia.indiatimes.com/city/jaipur/2-held-over-alleged-forced-conversion-in-alwar/articleshow/123706082.cms", title: "Misioneros cristianos que gestionan un hostel donde residen niños en Alwar, India, se les acusa de inducir a la conversión", imageKeyword: "India" },
+			{ text: "Pedimos por Larry Sanger, cofundador de Wikipedia, quien luego de ser filósofo escéptico ha anunciado públicamente su conversión al cristianismo; que su camino tras su nuevo compromiso sea testimonio de esperanza.", link: "https://cbn.com/news/us/co-founder-wikipedia-reveals-his-journey-skeptical-philosopher-christian", title: "Larry Sanger, cofundador de Wikipedia, tras ser un filósofo escéptico anuncia públicamente su conversión al cristianismo", imageKeyword: "EE.UU." },
+			{ text: "Oramos por España: que la propuesta de convertir el derecho al aborto en constitucional, anunciada en 2025, sea debatida con respeto al valor de cada vida.", link: "https://www.reuters.com/business/healthcare-pharmaceuticals/spain-seeks-make-abortion-constitutional-right-2025-10-03/", title: "Propuesta de convertir el derecho al aborto en constitucional en España", imageKeyword: "España" },
+			{ text: "Oramos por las miles de mujeres jóvenes españolas que se sienten presionadas a abortar debido a factores económicos o falta de apoyo, para que encuentren alternativas concretas y comunitarias.", link: null },
+			{ text: "Pedimos por los niños pobres de India, particularmente en las zonas rurales, muchos sin acceso a escuela ni alimentación suficiente, para que Dios abra puertas de esperanza.", link: null },
+			{ text: "Oramos por los que han sido víctimas de la pornografía de deepfake y contenido sexual no consensuado, cuyos derechos y dignidad han sido violados; que haya leyes y sanación.", link: "https://arxiv.org/abs/2402.01721", title: "Muchos usuarios de internet son víctimas de la pornografía de deepfake y contenido sexual no consensuado", imageKeyword: "Mundo" },
+			{ text: "Pedimos por las mujeres cristianas en Yemen que no tienen libertad de culto y enfrentan pobreza, para que no pierdan la fe aun cuando las circunstancias sean extremas.", link: null },
+			{ text: "Oramos por aquellos jóvenes que han sido alcanzados por el evangelio tras salir de vidas de drogadicción, prostitución o pornografía, que su testimonio llegue a otros en oscuridad.", link: null },
+			{ text: "Oramos por los niños en el África Subsahariana: más de 312 millones viven en pobreza extrema según informe del Banco Mundial y UNICEF, para que reciban alimento, educación y esperanza.", link: "https://nairametrics.com/2025/09/15/over-312-million-children-in-sub-saharan-africa-remain-in-extreme-poverty-world-bank-unicef/", title: "Más de 312 millones de personas en África Subsahariana viven en pobreza extrema según informe del Banco Mundial y UNICEF", imageKeyword: "África" },
+			{ text: "Pedimos por los más pequeños de Sudáfrica: el 23 % de los niños viven pobreza alimentaria grave, poniendo en riesgo su salud y desarrollo.", link: "https://www.unicef.org/southafrica/press-releases/23-per-cent-children-south-africa-live-severe-child-food-poverty", title: "El 23 % de los niños en Sudáfrica viven pobreza alimentaria grave", imageKeyword: "África" },
+			{ text: "Oramos por las familias pobres en Zambia; el alto costo de la vida las obliga a reducir o variar sus comidas, afectando su nutrición, como denuncia un sacerdote local.", link: "https://www.aciafrica.org/news/7988/high-cost-of-living-pushing-low-income-families-in-zambia-into-abject-poverty-priest", title: "Sacerdote local denuncia en Zambia el alto costo de la vida que obliga a las familias a reducir o variar sus comidas, afectando su nutrición", imageKeyword: "Zambia" },
+			{ text: "Pedimos por menores en Eslovenia: encuesta reveló que el 44 % de los adolescentes de primaria y el 62 % de secundaria han visto pornografía; muchos en edades tempranas.", link: "https://better-internet-for-kids.europa.eu/en/news/slovenian-teenagers-and-online-pornography", title: " En Eslovenia una encuesta reveló que el 44 % de los adolescentes de primaria y el 62 % de secundaria han visto pornografía; muchos en edades tempranas", imageKeyword: "Eslovenia" },
+			{ text: "Oramos por jóvenes en Galicia, España: casi la mitad han consumido pornografía al menos una vez, y más de un 20 % lo hizo el último mes, según estudio.", link: "https://link.springer.com/article/10.1007/s10508-025-03217-z", title: "Casi la mitad de jóvenes en Galicia han consumido pornografía al menos una vez, y más de un 20 % lo hace de forma habitual", imageKeyword: "España" },
+			{ text: "Pedimos por el Reino Unido: encuesta de 2025 muestra que el 70 % de jóvenes vieron pornografía antes de los 18 años, algunos tan jóvenes como 6 años, muchos de forma accidental.", link: "https://www.theguardian.com/society/2025/aug/18/children-exposure-to-porn-online-safety-act-commissioner", title: " En Reino Unido una encuesta de 2025 muestra que el 70 % de jóvenes vieron pornografía antes de los 18 años, algunos tan jóvenes como 6 años", imageKeyword: "Reino Unido" },
+			{ text: "Oramos por conversiones en India: una pareja cristiana, Pastor Jose Pappachen y su esposa, fue condenada por conversiones forzadas pese a falta de evidencia, aunque posteriormente se les concedió libertad bajo fianza.", link: "https://christiannews.net/2025/03/10/christian-couple-in-india-convicted-of-forced-conversion-wins-bail/" },
+			{ text: "Pedimos por las hermanas Preeti Mary y Vandana Francis en Chhattisgarh, India, detenidas junto con un laico por acusaciones de tráfico humano y conversión religiosa, para que Dios intervenga y haya justicia.", link: "https://en.wikipedia.org/wiki/Detention_of_Malayali_nuns_in_Chhattisgarh" },
+			{ text: "Oramos por los menores que residen en un hostal cristiano en Alwar, India, donde se les acusa de ser inducidos a abandonar su fe de origen; que la verdad salga a la luz y Dios proteja su libertad religiosa.", link: "https://timesofindia.indiatimes.com/city/jaipur/2-held-over-alleged-forced-conversion-in-alwar/articleshow/123706082.cms" },
+			{ text: "Pedimos por los adolescentes en Irlanda: un estudio revela que el 64 % de los jóvenes de 20 años consumen pornografía online; que haya sensibilidad, diálogo, acompañamiento pastoral.", link: "https://www.esri.ie/news/new-esri-report-finds-that-64-per-cent-of-20-year-old-men-use-online-pornography" },
+			{ text: "Oramos por Abdulraziq en Egipto, convertido al cristianismo y acusado de terrorismo por exigir que su documento nacional refleje su nueva fe.", link: "https://premierchristian.news/us/news/article/christian-convert-in-egypt-charged-with-terrorism" },
+			{ text: "Pedimos por Mehdi Rahimi y Kia Nourinia en Irán, conversos condenados a 12 años de cárcel por poseer múltiples Biblias.", link: "https://articleeighteen.com/news/16114/" },
+			{ text: "Oramos por Laleh Saati, convertida en Irán, liberada después de 15 meses de prisión condicionada, para que Dios le restituya libertad plena.", link: "https://www.barnabasaid.org/us/news/iranian-christian-convert-released-after-15-months-in-prison/" },
+			{ text: "Pedimos por Reza, refugiado iraní en Australia, que fue bautizado tras su llegada y lleva adelante comunidad persa de fe en medio de desafío.", link: "https://tma.melbourneanglican.org.au/2025/06/jesus-is-my-life-iranian-converts/" },
+			{ text: "Oramos por ‘Kia Hadaeghi’, quien fingió ser cristiano al pedir asilo pero luego vivió una transformación genuina de fe, para que su vida inspire a otros.", link: "https://www.premierchristianity.com/testimonies/i-pretended-to-be-a-christian-but-god-transformed-my-life-for-real/18250.article" },
+			{ text: "Pedimos por una familia cristiana en India (estado Chhattisgarh), expulsada de su hogar por rehusarse a convertirse al hinduismo.", link: "https://www.newsweek.com/christian-family-kicked-out-home-refusing-convert-2103422" },
+			{ text: "Oramos por Bangladesh: Barun, su madre y Akram, conversiones recientes atacadas violentamente, hospitalizados por su fe.", link: "https://www.opendoorsuk.org/news/latest-news/bangladesh-barun-akram/" },
+			{ text: "Pedimos por el hermano Rachid, converso marroquí que denuncia la persecución de cristianos en el norte de África, para que su testimonio alcance más corazones.", link: "https://www.csi-int.org/news/from-cradle-of-faith-to-persecuted-minority-my-witness-to-christianitys-struggle-in-north-africa/" },
+			{ text: "Oramos por los estudiantes de Derecho de Notre Dame que lograron asilo para un converso iraní que enfrentaba persecución por su fe.", link: "https://religiousliberty.nd.edu/news/latest/notre-dame-law-schools-religious-liberty-clinic-secures-asylum-for-iranian-christian-convert-facing-persecution/" },
+            { text: "Oramos por la familia de Vikram en India, expulsada de su aldea tras negarse a renunciar al cristianismo.", link: "https://www.newsweek.com/christian-family-kicked-out-home-refusing-convert-2103422" },
+			{ text: "Pedimos por la iglesia en Jaipur, donde extremistas irrumpieron y acusaron al pastor de conversión forzada mientras los creyentes adoraban.", link: "https://www.opendoorsus.org/en-US/stories/new-regulations-in-india-lead-to-spike-in-persecution/" },
+			{ text: "Oramos por la mujer somalí que tras convertirse al cristianismo perdió esposo, hogar y seguridad.", link: "https://premierchristian.news/us/news/article/somali-woman-forced-to-flee-family-home-after-conversion-to-christianity" },
+			{ text: "Pedimos por Mariam, cuyo esposo en Oriente Medio se convirtió a Jesús y enfrentaron riesgo, rechazo y separación familiar.", link: "https://www.opendoorsus.org/en-US/stories/mother-loses-everything-for-Jesus-Middle-East/" },
+			{ text: "Oramos por Ahmed, ex extremista islámico en Egipto, cuya vida fue transformada radicalmente por un sueño que le reveló a Cristo.", link: "https://globalchristianrelief.org/stories/a-former-islamic-extremists-miraculous-conversion-to-christianity/" },
+			{ text: "Pedimos por Souzan y su familia, refugiados que huyeron de Irán por persecución religiosa y vivieron 12 años sin derechos básicos antes de hallar asilo.", link: "https://worldrelief.org/spblog-suzans-story-fleeing-religious-persecution/" },
+			{ text: "Oramos por Mohammed Hegazy, primer musulmán en Egipto que solicitó reconocimiento de su conversión al cristianismo, enfrentando amenazas de apostasía.", link: "https://en.wikipedia.org/wiki/Mohammed_Hegazy" },
+			{ text: "Pedimos por los cristianos en Pakistán que sufrieron ataques en 2025: Suleman Masih abatido en Gujranwala y Waqas Masih brutalmente golpeado por resistir conversión.", link: "https://en.wikipedia.org/wiki/Persecution_of_Christians_in_Pakistan" },
+			{ text: "Oramos por las mujeres en el mundo que se someten a abortos inseguros: cada año casi el 45 % de los abortos en el mundo son peligrosos para la vida de la madre.", link: "https://www.who.int/news-room/fact-sheets/detail/abortion" },
+			{ text: "Pedimos por los millones de embarazos no planeados: casi la mitad de los embarazos son no intencionados y 6 de cada 10 terminan en aborto inducido.", link: "https://www.who.int/health-topics/abortion" },
+			{ text: "Oramos por las mujeres en Níger que recurren a abortos peligrosos: más del 90 % de los abortos allí se clasifican como inseguros.", link: "https://en.wikipedia.org/wiki/Abortion_in_Niger" },
+			{ text: "Pedimos por la dignidad humana en Europa, donde el debate sobre la eutanasia continúa ampliándose, que se proteja la vida de los más vulnerables.", link: "https://www.theguardian.com/world/2025/may/27/french-parliament-prepares-to-vote-on-legalising-assisted-dying" },
+            { text: "Oramos por los cristianos encarcelados en Eritrea, donde más de 400 creyentes permanecen presos en condiciones inhumanas por su fe.", link: "https://www.persecution.org/2025/04/18/eritrean-christians-remain-imprisoned-for-their-faith/" },
+			{ text: "Pedimos por los católicos en Nigeria que sufren violencia de grupos extremistas y ataques a iglesias durante la misa dominical.", link: "https://www.christianitytoday.com/news/2025/june/nigeria-catholic-church-attacks-terrorism.html" },
+			{ text: "Oramos por los conversos al cristianismo en Afganistán, donde ser seguidor de Jesús puede significar la muerte o el exilio forzado.", link: "https://www.opendoors.org/en-US/persecution/countries/afghanistan/" },
+			{ text: "Pedimos por los defensores de la vida en Estados Unidos que promueven alternativas al aborto frente a leyes cada vez más permisivas.", link: "https://www.bbc.com/news/world-us-canada-68746278" },
+			{ text: "Oramos por los cristianos en China, donde el gobierno intensifica el control sobre las iglesias y exige lealtad al Partido Comunista.", link: "https://www.persecution.org/2025/08/14/china-tightens-control-over-churches/" },
+			{ text: "Pedimos por los jóvenes europeos expuestos a la pornografía desde edades cada vez más tempranas, para que encuentren libertad y pureza.", link: "https://www.theguardian.com/society/2025/jan/23/teenage-porn-consumption-report-uk-europe" },
+			{ text: "Oramos por los refugiados cristianos en Sudán del Sur, desplazados por conflictos y perseguidos por su fe en los campamentos fronterizos.", link: "https://apnews.com/article/south-sudan-refugees-christians-2025" },
+			{ text: "Pedimos por la Iglesia en Corea del Norte, donde poseer una Biblia o reunirse para rezar puede implicar prisión o ejecución.", link: "https://www.opendoors.org/en-US/persecution/countries/north-korea/" }
+
+        ];
+
+        let availableQuotes = [];
+        let availableIntentions = [];
+        
+        const mainContent = document.getElementById('main-content');
+        const initialView = document.getElementById('initial-view');
+        const resultsView = document.getElementById('results-view');
+        const newsView = document.getElementById('news-view');
+        const prayButton = document.getElementById('pray-button');
+        const prayAgainButton = document.getElementById('pray-again-button');
+        const bibleClosed = document.getElementById('bible-closed');
+        const bibleOpen = document.getElementById('bible-open');
+        const menuButton = document.getElementById('menu-button');
+        const sideMenu = document.getElementById('side-menu');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const showNewsButton = document.getElementById('show-news-button');
+        const backToMainButton = document.getElementById('back-to-main-button');
+        
+        const scrollMeditar = document.getElementById('scroll-meditar');
+        const scrollRezar = document.getElementById('scroll-rezar');
+        const meditarModal = document.getElementById('meditar-modal');
+        const rezarModal = document.getElementById('rezar-modal');
+        const closeMeditar = document.getElementById('close-meditar');
+        const closeRezar = document.getElementById('close-rezar');
+
+        const quoteText = document.getElementById('quote-text');
+        const quoteAuthor = document.getElementById('quote-author');
+        const intentionText = document.getElementById('intention-text');
+        const intentionLink = document.getElementById('intention-link');
+        const rezarTitle = document.getElementById('rezar-title');
+        const newsContainer = document.getElementById('news-container');
+
+        function getListFromStorage(key, masterList) {
+            let list = [];
+            try {
+                const storedList = localStorage.getItem(key);
+                if (storedList && JSON.parse(storedList).length > 0) {
+                    list = JSON.parse(storedList);
+                } else {
+                    list = [...masterList];
+                    localStorage.setItem(key, JSON.stringify(list));
+                }
+            } catch (e) {
+                list = [...masterList];
+                localStorage.setItem(key, JSON.stringify(list));
+            }
+            return list;
+        }
+
+        function generateContent() {
+            availableQuotes = getListFromStorage('availableQuotes', masterQuotes);
+            availableIntentions = getListFromStorage('availableIntentions', masterIntentions);
+
+            const quoteIndex = Math.floor(Math.random() * availableQuotes.length);
+            const randomQuote = availableQuotes.splice(quoteIndex, 1)[0];
+            localStorage.setItem('availableQuotes', JSON.stringify(availableQuotes));
+
+            const intentionIndex = Math.floor(Math.random() * availableIntentions.length);
+            const randomIntention = availableIntentions.splice(intentionIndex, 1)[0];
+            localStorage.setItem('availableIntentions', JSON.stringify(availableIntentions));
+
+            quoteText.textContent = `"${randomQuote.text}"`;
+            quoteAuthor.textContent = randomQuote.author;
+            intentionText.textContent = randomIntention.text.replace(/\*\*/g, '');
+
+            if (randomIntention.link) {
+                intentionLink.href = randomIntention.link;
+                intentionLink.style.display = 'block';
+                rezarTitle.classList.add('pl-10');
+            } else {
+                intentionLink.style.display = 'none';
+                rezarTitle.classList.remove('pl-10');
+            }
+        }
+        
+        function populateNewsView() {
+            newsContainer.innerHTML = '';
+            const newsItems = masterIntentions.filter(item => item.link && item.title);
+            newsItems.forEach(item => {
+                const imageUrl = `https://placehold.co/100x100/6b4f2b/FFFFFF?text=${encodeURIComponent(item.imageKeyword || 'Noticia')}`;
+                const card = `
+                    <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="flex items-center bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <img src="${imageUrl}" alt="miniatura de la noticia" class="w-20 h-20 rounded-md object-cover mr-4 flex-shrink-0">
+                        <h3 class="text-md font-semibold text-gray-800 text-left">${item.title}</h3>
+                    </a>
+                `;
+                newsContainer.innerHTML += card;
+            });
+        }
+
+
+        function showView(viewToShow) {
+            mainContent.classList.add('hidden');
+            newsView.classList.add('hidden');
+
+            if (viewToShow === 'main') {
+                mainContent.classList.remove('hidden');
+            } else if (viewToShow === 'news') {
+                newsView.classList.remove('hidden');
+            }
+        }
+        
+        function showResults() {
+            bibleClosed.classList.add('hidden');
+            bibleOpen.classList.remove('hidden');
+            generateContent();
+            
+            initialView.classList.add('view-transition-out');
+            
+            setTimeout(() => {
+                initialView.classList.add('hidden');
+                initialView.classList.remove('view-transition-out');
+                
+                resultsView.classList.remove('hidden');
+                resultsView.classList.add('view-transition-in');
+            }, 600);
+        }
+
+        function resetView() {
+            bibleOpen.classList.add('hidden');
+            bibleClosed.classList.remove('hidden');
+            
+            resultsView.classList.add('view-transition-out');
+
+            setTimeout(() => {
+                resultsView.classList.add('hidden');
+                resultsView.classList.remove('view-transition-out');
+
+                initialView.classList.remove('hidden');
+                initialView.classList.add('view-transition-in');
+            }, 600);
+            
+            setTimeout(()=> {
+                 initialView.classList.remove('view-transition-in');
+            }, 1200);
+        }
+
+        function toggleMenu(open) {
+            const isNewsVisible = !newsView.classList.contains('hidden');
+            if (isNewsVisible) return;
+
+            if (open) {
+                sideMenu.classList.add('open');
+                menuOverlay.classList.add('open');
+            } else {
+                sideMenu.classList.remove('open');
+                menuOverlay.classList.remove('open');
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        prayButton.addEventListener('click', showResults);
+        prayAgainButton.addEventListener('click', resetView);
+        menuButton.addEventListener('click', () => toggleMenu(true));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
+        
+        showNewsButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMenu(false);
+            setTimeout(() => {
+                 showView('news');
+                 document.body.style.overflow = 'auto';
+            }, 300);
+        });
+
+        backToMainButton.addEventListener('click', () => {
+            showView('main');
+            document.body.style.overflow = 'hidden';
+        });
+
+        scrollMeditar.addEventListener('click', () => meditarModal.style.display = 'flex');
+        scrollRezar.addEventListener('click', () => rezarModal.style.display = 'flex');
+
+        closeMeditar.addEventListener('click', () => meditarModal.style.display = 'none');
+        closeRezar.addEventListener('click', () => rezarModal.style.display = 'none');
+        window.addEventListener('click', (event) => {
+            if (event.target == meditarModal) meditarModal.style.display = 'none';
+            if (event.target == rezarModal) rezarModal.style.display = 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', populateNewsView);
+    </script>
+</body>
+</html>
