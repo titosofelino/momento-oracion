@@ -100,8 +100,9 @@
     <div id="menu-overlay" class="fixed inset-0 bg-black/50 z-40"></div>
     <div id="side-menu" class="fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-6 z-50 shadow-lg">
         <h2 class="font-handwriting text-3xl mb-8">Menú</h2>
-        <nav>
+        <nav class="space-y-2">
             <a href="#" id="show-news-button" class="block py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Noticias para rezar</a>
+            <a href="#" id="show-saints-button" class="block py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">Vidas de Santos</a>
         </nav>
     </div>
 
@@ -133,41 +134,46 @@
     <!-- Vista de Noticias -->
     <div id="news-view" class="hidden fixed inset-0 bg-gray-100 z-20 p-4 pt-20 pb-20 overflow-y-auto">
         <header class="fixed top-0 left-0 right-0 flex items-center justify-center p-4 border-b bg-gray-100/80 backdrop-blur-sm z-30">
+            <button id="back-to-main-from-news" class="absolute left-4 text-gray-700 p-2 rounded-md hover:bg-gray-200">
+                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+            </button>
             <h1 class="font-handwriting text-4xl text-gray-800">Noticias para rezar</h1>
         </header>
-        <div id="news-container" class="space-y-4 max-w-3xl mx-auto">
-            <!-- Las noticias se insertarán aquí dinámicamente -->
+        <div id="news-container" class="space-y-4 max-w-3xl mx-auto"></div>
+    </div>
+
+    <!-- Vista Lista de Santos -->
+    <div id="saints-list-view" class="hidden fixed inset-0 bg-gray-100 z-20 p-4 pt-20 pb-20 overflow-y-auto">
+        <header class="fixed top-0 left-0 right-0 flex items-center justify-center p-4 border-b bg-gray-100/80 backdrop-blur-sm z-30">
+            <button id="back-to-main-from-saints" class="absolute left-4 text-gray-700 p-2 rounded-md hover:bg-gray-200">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+            </button>
+            <h1 class="font-handwriting text-4xl text-gray-800">Vidas de Santos</h1>
+        </header>
+        <div id="saints-container" class="space-y-4 max-w-3xl mx-auto"></div>
+    </div>
+
+    <!-- Vista Detalle de Santo (con scroll) -->
+    <div id="saint-detail-view" class="hidden fixed inset-0 bg-gray-100 z-30 p-4 overflow-y-auto">
+         <header class="fixed top-0 left-0 right-0 flex items-center justify-between p-4 border-b bg-gray-100/80 backdrop-blur-sm z-40">
+            <button id="back-to-saints-list" class="text-gray-700 p-2 rounded-md hover:bg-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+            <h1 id="saint-detail-title" class="font-handwriting text-3xl text-gray-800 text-center"></h1>
+             <div class="w-10"></div>
+        </header>
+        <div class="max-w-3xl mx-auto pt-20 pb-8">
+            <div id="saint-text-content" class="text-lg leading-relaxed space-y-6"></div>
         </div>
-        <button id="back-to-main-button" class="fixed bottom-4 left-4 z-30 bg-gray-700 text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-        </button>
     </div>
 
 
-    <!-- Modal para "Para Meditar" -->
-    <div id="meditar-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-meditar">&times;</span>
-            <h2 class="font-handwriting text-4xl text-amber-900 border-b border-amber-800 pb-2 mb-6">Para meditar:</h2>
-            <blockquote id="quote-text" class="text-xl italic"></blockquote>
-            <p id="quote-author" class="text-right mt-6 font-bold text-amber-800"></p>
-        </div>
-    </div>
-
-    <!-- Modal para "Para Rezar" -->
-    <div id="rezar-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" id="close-rezar">&times;</span>
-            <div class="relative flex items-center border-b border-sky-800 pb-2 mb-6">
-                <a id="intention-link" href="#" target="_blank" rel="noopener noreferrer" class="absolute -top-1 left-0 text-sky-700 hover:text-sky-900 transition-colors" title="Ver fuente" style="display: none;"><svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg></a>
-                <h2 id="rezar-title" class="font-handwriting text-4xl text-sky-900">Para rezar:</h2>
-            </div>
-            <p id="intention-text" class="text-xl"></p>
-        </div>
-    </div>
+    <!-- Modales de Oración -->
+    <div id="meditar-modal" class="modal"><div class="modal-content"><span class="close-button" id="close-meditar">&times;</span><h2 class="font-handwriting text-4xl text-amber-900 border-b border-amber-800 pb-2 mb-6">Para meditar:</h2><blockquote id="quote-text" class="text-xl italic"></blockquote><p id="quote-author" class="text-right mt-6 font-bold text-amber-800"></p></div></div>
+    <div id="rezar-modal" class="modal"><div class="modal-content"><span class="close-button" id="close-rezar">&times;</span><div class="relative flex items-center border-b border-sky-800 pb-2 mb-6"><a id="intention-link" href="#" target="_blank" rel="noopener noreferrer" class="absolute -top-1 left-0 text-sky-700 hover:text-sky-900 transition-colors" title="Ver fuente" style="display: none;"><svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg></a><h2 id="rezar-title" class="font-handwriting text-4xl text-sky-900">Para rezar:</h2></div><p id="intention-text" class="text-xl"></p></div></div>
 
     <script>
-        // --- MASTER LISTS (DO NOT CHANGE) ---
+        // --- MASTER LISTS ---
         const masterQuotes = [
             { text: "El Señor es mi pastor, nada me falta.", author: "Salmo 23,1" },
             { text: "Aunque ande en valle de sombra de muerte, no temeré mal alguno, porque tú estarás conmigo.", author: "Salmo 23,4" },
@@ -363,23 +369,125 @@
 
         ];
 
+        const masterSaints = [
+            {
+                id: 'sanjosemaria',
+                name: 'San Josemaría Escrivá',
+                subtitle: 'El santo de lo ordinario',
+                imageKeyword: 'España',
+                text: [
+                    "**Una familia cristiana (1902 – 1914)**",
+                    "Josemaría Escrivá de Balaguer nació en Barbastro (Huesca, España) el 9 de enero de 1902. Sus padres se llamaban José y Dolores. Tuvo cinco hermanos: Carmen (1899-1957), Santiago (1919-1994) y otras tres hermanas menores que él, que murieron cuando eran niñas. El matrimonio Escrivá dio a sus hijos una profunda educación cristiana.",
+                    "**Vocación de San Josemaría (1914 – 1918)**",
+                    "En 1915 quebró el negocio del padre, comerciante de tejidos, y la familia hubo de trasladarse a Logroño, donde el padre encontró otro trabajo. En esa ciudad, Josemaría, después de ver unas huellas en la nieve de los pies descalzos de un religioso, intuye que Dios desea algo de él, aunque no sabe exactamente qué es. Piensa que podrá descubrirlo más fácilmente si se hace sacerdote, y comienza a prepararse primero en Logroño y más tarde en el seminario de Zaragoza.",  "",
+                    "**Ordenación sacerdotal (1918 - 1925)**",
+                    "Siguiendo un consejo de su padre, en la Universidad de Zaragoza estudia también la carrera civil de Derecho como alumno libre. D. José Escrivá muere en 1924, y Josemaría queda como cabeza de familia. Recibe la ordenación sacerdotal el 28 de marzo de 1925 y comienza a ejercer el ministerio primero en una parroquia rural y luego en Zaragoza.",
+                    "**Fundación del Opus Dei y dedicación a los pobres y enfermos (1928 - 1936)**",
+                    "En 1927 se traslada a Madrid, con permiso de su obispo, para obtener el doctorado en Derecho. En Madrid, el 2 de octubre de 1928, Dios le hace ver lo que espera de él, y funda el Opus Dei. Desde ese día trabaja con todas sus fuerzas en el desarrollo de la fundación que Dios le pide, al tiempo que continúa con el ministerio pastoral que tiene encomendado en aquellos años, que le pone diariamente en contacto con la enfermedad y la pobreza en hospitales y barriadas populares de Madrid. [+información]",
+                    "**Guerra Civil Española y Paso de los Pirineos (1936 - 1939)**",
+                    "Al estallar la guerra civil, en 1936, Josemaría Escrivá se encuentra en Madrid. La persecución religiosa le obliga a refugiarse en diferentes lugares. Ejerce su ministerio sacerdotal clandestinamente, hasta que logra salir de Madrid. Después de una travesía por los Pirineos hasta el sur de Francia, se traslada a Burgos. [+información]",
+                    "**Intenso trabajo pastoral (1939 - 1945)**",
+                    "Cuando acaba la guerra, en 1939, regresa a Madrid. En los años siguientes dirige numerosos ejercicios espirituales para laicos, para sacerdotes y para religiosos. En el mismo año 1939 termina sus estudios de doctorado en Derecho.",
+                    "**Roma y el Concilio Vaticano II (1946 - 1965)**",
+                    "En 1946 fija su residencia en Roma. Obtiene el doctorado en Teología por la Universidad Lateranense. Es nombrado consultor de dos Congregaciones vaticanas, miembro honorario de la Pontificia Academia de Teología y prelado de honor de Su Santidad. Sigue con atención los preparativos y las sesiones del Concilio Vaticano II (1962-1965), y mantiene un trato intenso con muchos de los padres conciliares.",
+                    "**Expansión del Opus Dei y viajes de catequesis (1970 - 1975)**",
+                    "Desde Roma viaja en numerosas ocasiones a distintos países de Europa, para impulsar el establecimiento y la consolidación del trabajo apostólico del Opus Dei. Con el mismo objeto, entre 1970 y 1975 hace largos viajes por México, la Península Ibérica, América del Sur y Guatemala, donde además tiene reuniones de catequesis con grupos numerosos de hombres y mujeres.",
+                    "**Fallecimiento y fama de santidad**",
+                    "Fallece en Roma el 26 de junio de 1975. Varios miles de personas, entre ellas numerosos obispos de distintos países —en conjunto, un tercio del episcopado mundial—, solicitan a la Santa Sede la apertura de su causa de canonización.",
+                    "**Canonización de san Josemaría**",
+                    "El 17 de mayo de 1992, Juan Pablo II beatifica a Josemaría Escrivá de Balaguer. Lo proclama santo diez años después, el 6 de octubre de 2002, en la plaza de San Pedro, en Roma, ante una gran multitud. «Siguiendo sus huellas —dijo en esa ocasión el Papa en su homilía—, difundid en la sociedad, sin distinción de raza, clase, cultura o edad, la conciencia de que todos estamos llamados a la santidad».",
+
+                ]
+            },
+            {
+                id: 'carloacutis',
+                name: 'San Carlo Acutis',
+                subtitle: 'El santo millenial',
+                imageKeyword: 'Italia',
+                text: [
+                    "San Carlo Acutis fue elevado a los altares por la Iglesia católica. Este joven es el primer millennial en ser canonizado.",
+                    "Fue un niño y un adolescente tranquilo, le gustaban los videojuegos y tenía una afición especial por la computación. Pero también tenía una característica que lo distinguía de otros chicos de su edad: un amor a toda prueba por la Eucaristía.",
+                    "Estudiante italiano y aficionado programador de informática, fue conocido por documentar milagros eucarísticos y apariciones marianas aprobadas por la Iglesia católica en todo el mundo, así como catalogar toda esa información en un sitio web que creó antes de su pronta muerte, a los 15 años, por leucemia.",
+                    "**Infancia y juventud de Carlo Acutis**",
+                    "Descendiente de una familia italiana, originaria de Lombardía, Carlo Acutis nació el 3 de mayo de 1991 en Londres, Inglaterra, en donde se encontraban sus padres, Andrea Acutis y Antonia Salzano, por motivos profesionales; Cuatro meses después de su nacimiento, la familia regresa a Italia y se instalan en la ciudad de Milán.",
+                    "Carlo Acutis estudió la primaria y la secundaria en escuelas dirigidas por las Hermanas Marcelinas, y asistió al Liceo Clásico León XIII, dirigido por los jesuitas, lo que fue fundamental para su formación católica, al grado de que ejerció cierta influencia con su ejemplo al transmitir la importancia que tenía la Eucaristía, que para él representaba “la vía que lleva al Cielo”.",
+                    "**Intereses y pasatiempos, como el fútbol y los videojuegos**",
+                    "El próximo santo, Carlo Acutis, desde muy pequeño contaba con un gran talento con todo lo relacionado con la informática, por lo que se le consideraba un genio, ya que tenía una gran capacidad para entender los secretos informáticos, a los que normalmente acceden quienes han cursado estudios universitarios.",
+                    "Los intereses de Carlo abarcaban desde la programación de ordenadores al montaje de películas, la creación de sitios web, los periódicos de los que se ocupaba también de la redacción y la maquetación, hasta llegar al voluntariado con los más necesitados, los niños y los ancianos.",
+                    "Carlo Acutis fue un niño y un adolescente tranquilo, le gustaban los videojuegos y tenía una afición especial por la computación.",
+                    "**La enfermedad y fallecimiento de Carlo Acutis**",
+                    "A principios de octubre de 2006, Carlo Acutis se sintió mal y debido a la sintomatología que presentaba todo parecía indicar que podría tratarse de una simple gripe, sin embargo, pronto ese padecimiento derivó en una astenia severa, esto es, una sensación generalizada de cansancio, falta de fuerzas, debilidad muscular y lentitud psíquica, así como en la presencia de sangre en la orina.",
+                    "Ante este cuadro, su madre Antonia Salzano, buscó al pediatra Vittorio Carnelli, quien había tratado siempre a Carlo, quien le recomendó hospitalizarlo de manera inmediata en la clínica De Marchi para que se le realizaran una serie de estudios clínicos para determinar su padecimiento.",
+                    "El desafortunado diagnóstico llegó: leucemia mieloide aguda M3, catalogada como la forma más agresiva de dicha enfermedad, ya que es un tipo de cáncer que se origina generalmente en las células madre que producen los granulocitos y se manifiesta inicialmente en la médula ósea, pero en la mayoría de los casos se extiende rápidamente a través de la sangre.",
+                    "Carlo Acutis escuchó el diagnóstico de los hematólogos y comentó: “El Señor me ha dado un bonito toque de atención”. El joven de 15 años fue trasladado al hospital San Gerardo de Monza para su tratamiento, pero al llegar movió la cabeza y señaló: “No saldré vivo de aquí” y añadió que ofrecería “su sufrimiento por el Papa y por la Iglesia”. Tres días después, el 12 de octubre, falleció.",
+                    "Meses antes de fallecer y cuando aún contaba con una buena salud, Carlo Acutis grabó un video con su celular, en el que anunció su muerte: “Estoy predestinado a morir”, señaló en la grabación de poco más de 10 segundos. Esas imágenes las vio su madre varios días después de su fallecimiento.",
+                    "**¿Por qué Carlo Acutis es santo?**",
+                    "Considerado ya como el primer “santo influencer” de la Iglesia Católica, Carlo Acutis dedicó su vida a evangelizar y a llevar la palabra de Dios por medio de internet, una herramienta que consideró muy importante, ya que por medio de ella se podía llegar a más personas en todo el mundo.",
+                    "El Papa Francisco aseguró que el joven italiano Carlo Acutis “supo utilizar las nuevas técnicas de comunicación para transmitir el Evangelio, comunicar valores y belleza”, por esa razón muchos católicos consideran que será “el patrón de la web” por haberse dedicado a hablar de su fe y ayudar a los demás a través de la tecnología.",
+                    "Carlo Acutis realizó una investigación sobre los milagros eucarísticos ocurridos en todo el mundo y la colocó en internet, exposición que puede verse en el sitio que él construyó www.miracolieucaristici.org. Este trabajo de investigación lo inició cuando tenía 11 años y dio como resultado una obra que explica los hechos milagrosos en torno a la Eucaristía en veinte países.",
+                    "Al respecto, el cardenal Angelo Becciu, prefecto de la Congregación para las Causas de los Santos, dijo que Acutis era un ejemplo de fe para los jóvenes ya que “era catequista, logró transmitir la fe a los niños, no solo en la forma clásica de las reuniones, sino que también explotó los medios telemáticos” y prueba de ello fue el crear el proyecto informático sobre los milagros eucarísticos.",
+                    "Esta labor realizada por Acutis es un ejemplo que la Iglesia utiliza para demostrar que el Internet y las nuevas tecnologías no están peleadas y pueden ser usadas para alcanzar buenas metas y cumplir su misión evangelizadora por todo el mundo.",
+                    "**Carlo y su gran amor por la Eucaristía**",
+                    "En entrevista exclusiva con Desde la fe, Antonia Salzano, la madre de Carlo Acutis, señaló que su hijo siempre estuvo enamorado de la Eucaristía y un ejemplo de ello era el hecho de que cuando tenía 3 o 4 años entraba en la iglesia y quería estar enfrente del Tabernáculo (Sagrario) y de la Cruz de Jesús.",
+                    "Indicó que seguramente el momento más importante para él fue cuando hizo su Primera Comunión, a los 7 años, cuando decidió que iba a ‘estar siempre unido a Jesús, este es mi programa de vida’. “Desde este momento asistió a la misa de cada día a hacer la adoración Eucarística siempre, un poco antes o después de la misa, y era muy fiel a este encuentro”.",
+                    "Si nos íbamos a un viaje al extranjero, la preocupación principal de Carlo era buscar la iglesia más cercana de nuestro hotel para no perder el encuentro con Jesús, eso era algo que tenía Carlo por mantener el encuentro con el Señor”, comentó.",
+                    "El mismo Carlo explicó su amor por la Eucaristía en los siguientes términos: “la Eucaristía es mi autopista hacia el Cielo. Somos más afortunados que los Apóstoles que vivieron con Jesús hace 2000 años: para encontrarnos con Él basta con que entremos en la iglesia. Jerusalén está al lado de nuestras casas”.",
+                    "“Sí, creo que recibió gracias especiales. No hablaba mucho sobre esto, pero sí me dijo que cuando estaba frente a la Sagrada Eucaristía, sentía que su alma ‘se elevaba’ de alguna manera”, comentó Salzano. “Estar siempre unido a Jesús, este es mi programa de vida”, decía Carlo.",
+                    "**Carlo y su admiración por la Virgen María**",
+                    "La Virgen María representó uno de los grandes pilares de la espiritualidad de Carlo Acutis y un claro ejemplo de ello quedó plasmado en el comentario que les hizo a sus padres sobre ella: “¡La Virgen es la única mujer de mi vida!”.",
+                    "Además, el joven italiano que será elevado a los altares como santo jamás faltó a su cita diaria con el Rosario, pues decía que confiaba en María como madre y maestra, además de que incluso varias veces renovó su consagración al Inmaculado Corazón de María.",
+                    "En este tenor, a Carlo Acutis le gustaron especialmente las historias de las apariciones de Nuestra Señora de Lourdes y de la Virgen de Fátima, además de la Virgen de Guadalupe de México, con quien aseguró Antonia Salzano a Desde la fe, su hijo tenía una conexión única.",
+                    "“Carlo tenía una gran cercanía con la Virgen de Guadalupe, incluso habla de ella en su exposición de Milagros Eucarísticos. Decía que la Virgen de Guadalupe es un poco un signo Eucarístico porque está embarazada y lleva en su vientre a Jesús. Todos deberíamos hacer que Jesús nazca en nuestro corazón”, indicó.",
+                    "**La Beatificación de Carlo Acutis**",
+                    "La beatificación de Carlo Acutis fue una de las más rápidas que ha aprobado la Iglesia católica, ya que sólo transcurrieron 14 años entre el día de su fallecimiento y la fecha en que fue beatificado, luego de que el proceso de beatificación fuera iniciado por el cardenal Angelo Scola, en la arquidiócesis de Milán el 13 de mayo de 2013.",
+                    "La investigación diocesana se envió el 24 de noviembre de 2016 a Roma para que fuera estudiada por la Congregación para las Causas de los Santos y luego del informe positivo de las distintas comisiones, el 5 de julio de 2018 el Papa Francisco declaró Venerable a Carlo Acutis, en reconocimiento a sus virtudes heroicas.",
+                    "Posteriormente, el 21 de febrero de 2020, tras un análisis de una comisión de médicos y de la Congregación para las Causas de los Santos, el papa Francisco aprobó un milagro atribuido a la intercesión de Carlo Acutis en Brasil, que permitió iniciar el proceso de su beatificación.",
+                    "El 10 de octubre de 2020, el llamado “ciberapostol de Dios” fue declarado beato por el Papa Francisco en una ceremonia religiosa que presidió en la Basílica de San Francisco de Asís, en Italia, el cardenal Domenico Sorrentino, Arzobispo de Asís.",
+                    "**El Proceso de canonización de Acutis**",
+                    "Poco después de 3 años y medio de haber sido beatificado, el 23 de mayo de 2024 el Papa Francisco reconoció un segundo milagro atribuido a la intercesión del entonces beato Carlo Acutis, por lo que autorizó al Dicasterio de las Causas de los Santos a promulgar el decreto relativo a dicho hecho, con lo que se inició el camino para su canonización.",
+                    "En la Sesión del Consistorio Ordinario Público convocada por el Papa Francisco se informó a todos los Cardenales de la Iglesia sobre los resultados alcanzados en torno a la causa, determinando la fecha de la celebración de la canonización, que ocurrió el 7 de septiembre de este año y fue presidida por el Papa León XIV en la Basílica de San Pedro.",
+                    "**Los milagros atribuidos a la intercesión de Carlo Acutis para su canonización**",
+                    "Dos milagros atribuidos a la intercesión de Carlo Acutis, reconocidos por el Papa Francisco, son los que abrieron el camino para que el “ciberapóstol de Dios” fuera elevado a los altares como santo de la Iglesia católica.",
+                    "El primero de esos milagros, que permitió su beatificación, ocurrió el 12 de octubre de 2010 en la capilla de Nuestra Señora Aparecida de Campo Grande, Brasil, cuatro años después de la muerte de Carlo, cuando un niño llamado Matheus que sufría un páncreas anular se acercó a besar una reliquia de Acutis y le pidió “dejar de vomitar”.",
+                    "El padre Marcelo Tenorio, vicepostulador de la Causa explicó que “la enfermedad causaba que el niño vomitara todo el tiempo, lo que le debilitaba mucho”. En la fila para la bendición de la reliquia, el niño le preguntó a su abuelo qué debía pedir, y este contestó: “Dejar de vomitar”. A partir de ese día, los síntomas de la condición médica desaparecieron y las pruebas médicas demostraron que estaba completamente curado.",
+                    "El segundo milagro obrado por Dios, por intercesión de Carlo Acutis, lo recibió Valeria, una jovencita de Costa Rica. Su madre, de nombre Liliana, pidió por ella en julio de 2022, pues la universitaria se había caído de una bicicleta cuando volvía a casa de la escuela, lo que le provocó un traumatismo craneoencefálico muy grave, que le daba una esperanza de supervivencia casi nula.",
+                    "Liliana viajó a Asís para pedir la intercesión del beato Carlo Acutis. Cuando llegó a la tumba del joven en el hospital se informó que Valeria había comenzado a reanudar su respiración espontáneamente y al día siguiente empezó a moverse de nuevo y a hablar parcialmente. 16 días después del accidente, en una tomografía se mostró que la hemorragia desapareció y el 11 de agosto fue trasladada a terapia de rehabilitación.",
+                    "**¿Dónde está enterrado Carlo Acutis?**",
+                    "Luego de fallecer, la familia decidió enterrar a Carlo Acutis en el cementerio de Ternengo, ubicado en la región italiana de Piamonte. Sin embargo, en enero de 2007, su cuerpo fue trasladado al cementerio de Asís, una ciudad que alberga la tumba de San Francisco de Asís, uno de los santos más venerados.",
+                    "**Exhumación del cuerpo de Carlo Acutis**",
+                    "El 23 de enero de 2019 se exhumó el cuerpo de Carlo y el 6 de abril del mismo año los trasladaron a la Parroquia de Santa María la Mayor, también conocida como el Santuario del Despojo, en Asís.",
+                    "En una entrevista concedida en 2020, Antonia Salzano indicó: “Teníamos tumbas de familia, teníamos varias, pero a Carlo le gustó la idea de ser enterrado en Asís. Yo le pregunté qué pensaba de la idea de adquirir el nicho, una tumba en tierra que se vendía aquí en Asís, y ser sepultado en ella. Y Carlo me dijo que sería muy feliz, que le parecía una idea muy bella. Yo lo interpreté un poco como su disposición testamentaria”.",
+
+                ]
+            }
+        ];
+
         let availableQuotes = [];
         let availableIntentions = [];
         
+        // --- DOM ELEMENTS ---
         const mainContent = document.getElementById('main-content');
         const initialView = document.getElementById('initial-view');
         const resultsView = document.getElementById('results-view');
         const newsView = document.getElementById('news-view');
+        const saintsListView = document.getElementById('saints-list-view');
+        const saintDetailView = document.getElementById('saint-detail-view');
+        
         const prayButton = document.getElementById('pray-button');
         const prayAgainButton = document.getElementById('pray-again-button');
         const bibleClosed = document.getElementById('bible-closed');
         const bibleOpen = document.getElementById('bible-open');
+        
         const menuButton = document.getElementById('menu-button');
         const sideMenu = document.getElementById('side-menu');
         const menuOverlay = document.getElementById('menu-overlay');
         const showNewsButton = document.getElementById('show-news-button');
-        const backToMainButton = document.getElementById('back-to-main-button');
+        const showSaintsButton = document.getElementById('show-saints-button');
         
+        const backToMainFromNews = document.getElementById('back-to-main-from-news');
+        const backToMainFromSaints = document.getElementById('back-to-main-from-saints');
+        const backToSaintsList = document.getElementById('back-to-saints-list');
+
         const scrollMeditar = document.getElementById('scroll-meditar');
         const scrollRezar = document.getElementById('scroll-rezar');
         const meditarModal = document.getElementById('meditar-modal');
@@ -392,18 +500,22 @@
         const intentionText = document.getElementById('intention-text');
         const intentionLink = document.getElementById('intention-link');
         const rezarTitle = document.getElementById('rezar-title');
+        
         const newsContainer = document.getElementById('news-container');
+        const saintsContainer = document.getElementById('saints-container');
 
+        const saintDetailTitle = document.getElementById('saint-detail-title');
+        const saintTextContent = document.getElementById('saint-text-content');
+        
+
+        // --- LOGIC FUNCTIONS ---
+        
         function getListFromStorage(key, masterList) {
             let list = [];
             try {
                 const storedList = localStorage.getItem(key);
-                if (storedList && JSON.parse(storedList).length > 0) {
-                    list = JSON.parse(storedList);
-                } else {
-                    list = [...masterList];
-                    localStorage.setItem(key, JSON.stringify(list));
-                }
+                if (storedList && JSON.parse(storedList).length > 0) { list = JSON.parse(storedList); } 
+                else { list = [...masterList]; localStorage.setItem(key, JSON.stringify(list)); }
             } catch (e) {
                 list = [...masterList];
                 localStorage.setItem(key, JSON.stringify(list));
@@ -442,41 +554,68 @@
             const newsItems = masterIntentions.filter(item => item.link && item.title);
             newsItems.forEach(item => {
                 const imageUrl = `https://placehold.co/100x100/6b4f2b/FFFFFF?text=${encodeURIComponent(item.imageKeyword || 'Noticia')}`;
-                const card = `
-                    <a href="${item.link}" target="_blank" rel="noopener noreferrer" class="flex items-center bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <img src="${imageUrl}" alt="miniatura de la noticia" class="w-20 h-20 rounded-md object-cover mr-4 flex-shrink-0">
-                        <h3 class="text-md font-semibold text-gray-800 text-left">${item.title}</h3>
-                    </a>
-                `;
+                const card = `<a href="${item.link}" target="_blank" rel="noopener noreferrer" class="flex items-center bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"><img src="${imageUrl}" alt="miniatura" class="w-20 h-20 rounded-md object-cover mr-4 flex-shrink-0"><h3 class="text-md font-semibold text-gray-800 text-left">${item.title}</h3></a>`;
                 newsContainer.innerHTML += card;
             });
         }
-
-
-        function showView(viewToShow) {
-            mainContent.classList.add('hidden');
-            newsView.classList.add('hidden');
-
-            if (viewToShow === 'main') {
-                mainContent.classList.remove('hidden');
-            } else if (viewToShow === 'news') {
-                newsView.classList.remove('hidden');
-            }
+        
+        function populateSaintsList() {
+            saintsContainer.innerHTML = '';
+            masterSaints.forEach(saint => {
+                const imageUrl = `https://placehold.co/100x100/A8875E/FFFFFF?text=${encodeURIComponent(saint.imageKeyword || 'Santo')}`;
+                const card = `<div data-saint-id="${saint.id}" class="saint-card flex items-center bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"><img src="${imageUrl}" alt="miniatura" class="w-20 h-20 rounded-md object-cover mr-4 flex-shrink-0"><div class="text-left"><h3 class="text-lg font-semibold text-gray-800">${saint.name}</h3><p class="text-gray-600">${saint.subtitle}</p></div></div>`;
+                saintsContainer.innerHTML += card;
+            });
         }
         
+        function showSaintDetail(saintId) {
+            const saintData = masterSaints.find(s => s.id === saintId);
+            if (!saintData) return;
+            
+            saintDetailTitle.textContent = saintData.name;
+            const fullText = saintData.text.map(paragraph => {
+                if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+                    return `<h3 class="text-xl font-bold mt-4 mb-2 font-handwriting">${paragraph.replaceAll('**','')}</h3>`;
+                }
+                return `<p>${paragraph}</p>`;
+            }).join('');
+            saintTextContent.innerHTML = fullText;
+
+            showView('saint-detail-view');
+            document.getElementById('saint-detail-view').scrollTop = 0;
+        }
+
+        function showView(viewId) {
+            const views = [mainContent, newsView, saintsListView, saintDetailView];
+            views.forEach(view => view.classList.add('hidden'));
+
+            const viewToShow = document.getElementById(viewId);
+            if (viewToShow) {
+                viewToShow.classList.remove('hidden');
+            }
+            
+            document.body.style.overflow = (viewId === 'main-content') ? 'hidden' : 'auto';
+            const isMainContent = viewId === 'main-content';
+            menuButton.style.display = isMainContent ? 'block' : 'none';
+            if (isMainContent) {
+                 const mainSubView = document.querySelector('#main-content > div:not(.hidden)');
+                 if(!mainSubView) { // if no subview is visible, show initial
+                    initialView.classList.remove('hidden');
+                 }
+            }
+        }
+
         function showResults() {
             bibleClosed.classList.add('hidden');
             bibleOpen.classList.remove('hidden');
             generateContent();
-            
             initialView.classList.add('view-transition-out');
-            
             setTimeout(() => {
                 initialView.classList.add('hidden');
                 initialView.classList.remove('view-transition-out');
-                
                 resultsView.classList.remove('hidden');
                 resultsView.classList.add('view-transition-in');
+                 setTimeout(() => resultsView.classList.remove('view-transition-in'), 600);
             }, 600);
         }
 
@@ -500,9 +639,6 @@
         }
 
         function toggleMenu(open) {
-            const isNewsVisible = !newsView.classList.contains('hidden');
-            if (isNewsVisible) return;
-
             if (open) {
                 sideMenu.classList.add('open');
                 menuOverlay.classList.add('open');
@@ -513,23 +649,30 @@
         }
 
         // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populateNewsView();
+            populateSaintsList();
+        });
+
         prayButton.addEventListener('click', showResults);
-        prayAgainButton.addEventListener('click', resetView);
+        prayAgainButton.addEventListener('click', () => resetView());
+
         menuButton.addEventListener('click', () => toggleMenu(true));
         menuOverlay.addEventListener('click', () => toggleMenu(false));
         
-        showNewsButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleMenu(false);
-            setTimeout(() => {
-                 showView('news');
-                 document.body.style.overflow = 'auto';
-            }, 300);
-        });
+        showNewsButton.addEventListener('click', (e) => { e.preventDefault(); toggleMenu(false); setTimeout(() => showView('news-view'), 300); });
+        showSaintsButton.addEventListener('click', (e) => { e.preventDefault(); toggleMenu(false); setTimeout(() => showView('saints-list-view'), 300); });
 
-        backToMainButton.addEventListener('click', () => {
-            showView('main');
-            document.body.style.overflow = 'hidden';
+        backToMainFromNews.addEventListener('click', () => showView('main-content'));
+        backToMainFromSaints.addEventListener('click', () => showView('main-content'));
+        backToSaintsList.addEventListener('click', () => showView('saints-list-view'));
+
+        saintsContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.saint-card');
+            if (card) {
+                const saintId = card.dataset.saintId;
+                showSaintDetail(saintId);
+            }
         });
 
         scrollMeditar.addEventListener('click', () => meditarModal.style.display = 'flex');
@@ -541,8 +684,7 @@
             if (event.target == meditarModal) meditarModal.style.display = 'none';
             if (event.target == rezarModal) rezarModal.style.display = 'none';
         });
-
-        document.addEventListener('DOMContentLoaded', populateNewsView);
     </script>
 </body>
 </html>
+
