@@ -325,7 +325,7 @@
 			{ text: "Oramos por las miles de mujeres jóvenes españolas que se sienten presionadas a abortar debido a factores económicos o falta de apoyo, para que encuentren alternativas concretas y comunitarias.", link: null },
 			{ text: "Pedimos por los niños pobres de India, particularmente en las zonas rurales, muchos sin acceso a escuela ni alimentación suficiente, para que Dios abra puertas de esperanza.", link: null },
 			{ text: "Oramos por los que han sido víctimas de la pornografía de deepfake y contenido sexual no consensuado, cuyos derechos y dignidad han sido violados; que haya leyes y sanación.", link: "https://arxiv.org/abs/2402.01721", title: "Muchos usuarios de internet son víctimas de la pornografía de deepfake y contenido sexual no consensuado", imageKeyword: "Mundo" },
-			{ text: "Pedimos por las mujeres cristianas en Yemen que no tienen libertad de culto y enfrentan pobreza, para que no pierdan la fe aun cuando las circunstancias sean extremas.", link: null },
+			{ text: "Pedimos por las mujeres cristianas en Yemen que no tienen libertad de culto y enfrentan pobreza, para que no pierdan la fe aun cuando las circunstancias sean extremas.", link: "https://puertasabiertasal.org/persecucion-de-cristianos/lista-mundial/yemen/", title: "Pobreza y persecución cristiana en Yemen, número 3 del ranking mundial de cristianos perseguidos", imageKeyword: "Yemen" },
 			{ text: "Oramos por aquellos jóvenes que han sido alcanzados por el evangelio tras salir de vidas de drogadicción, prostitución o pornografía, que su testimonio llegue a otros en oscuridad.", link: null },
 			{ text: "Oramos por los niños en el África Subsahariana: más de 312 millones viven en pobreza extrema según informe del Banco Mundial y UNICEF, para que reciban alimento, educación y esperanza.", link: "https://nairametrics.com/2025/09/15/over-312-million-children-in-sub-saharan-africa-remain-in-extreme-poverty-world-bank-unicef/", title: "Más de 312 millones de personas en África Subsahariana viven en pobreza extrema según informe del Banco Mundial y UNICEF", imageKeyword: "África" },
 			{ text: "Pedimos por los más pequeños de Sudáfrica: el 23 % de los niños viven pobreza alimentaria grave, poniendo en riesgo su salud y desarrollo.", link: "https://www.unicef.org/southafrica/press-releases/23-per-cent-children-south-africa-live-severe-child-food-poverty", title: "El 23 % de los niños en Sudáfrica viven pobreza alimentaria grave", imageKeyword: "África" },
@@ -396,13 +396,12 @@
                     "Fallece en Roma el 26 de junio de 1975. Varios miles de personas, entre ellas numerosos obispos de distintos países —en conjunto, un tercio del episcopado mundial—, solicitan a la Santa Sede la apertura de su causa de canonización.",
                     "**Canonización de san Josemaría**",
                     "El 17 de mayo de 1992, Juan Pablo II beatifica a Josemaría Escrivá de Balaguer. Lo proclama santo diez años después, el 6 de octubre de 2002, en la plaza de San Pedro, en Roma, ante una gran multitud. «Siguiendo sus huellas —dijo en esa ocasión el Papa en su homilía—, difundid en la sociedad, sin distinción de raza, clase, cultura o edad, la conciencia de que todos estamos llamados a la santidad».",
-
                 ]
             },
             {
                 id: 'carloacutis',
                 name: 'San Carlo Acutis',
-                subtitle: 'El santo millenial',
+                subtitle: 'El santo millennial',
                 imageKeyword: 'Italia',
                 text: [
                     "San Carlo Acutis fue elevado a los altares por la Iglesia católica. Este joven es el primer millennial en ser canonizado.",
@@ -462,8 +461,8 @@
             }
         ];
 
-        let availableQuotes = [];
-        let availableIntentions = [];
+        let dailyQuote = null;
+        let dailyIntention = null;
         
         // --- DOM ELEMENTS ---
         const mainContent = document.getElementById('main-content');
@@ -507,40 +506,70 @@
         const saintDetailTitle = document.getElementById('saint-detail-title');
         const saintTextContent = document.getElementById('saint-text-content');
         
-
         // --- LOGIC FUNCTIONS ---
+        
+        function getTodaysDateString() {
+            const today = new Date();
+            return `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+        }
         
         function getListFromStorage(key, masterList) {
             let list = [];
             try {
                 const storedList = localStorage.getItem(key);
                 if (storedList && JSON.parse(storedList).length > 0) { list = JSON.parse(storedList); } 
-                else { list = [...masterList]; localStorage.setItem(key, JSON.stringify(list)); }
+                else { list = [...masterList]; }
             } catch (e) {
                 list = [...masterList];
-                localStorage.setItem(key, JSON.stringify(list));
             }
             return list;
         }
 
-        function generateContent() {
-            availableQuotes = getListFromStorage('availableQuotes', masterQuotes);
-            availableIntentions = getListFromStorage('availableIntentions', masterIntentions);
+        function loadDailyContent() {
+            const todayString = getTodaysDateString();
 
-            const quoteIndex = Math.floor(Math.random() * availableQuotes.length);
-            const randomQuote = availableQuotes.splice(quoteIndex, 1)[0];
-            localStorage.setItem('availableQuotes', JSON.stringify(availableQuotes));
+            // 1. Get Global Daily Intention (deterministic based on date)
+            const epoch = new Date('2024-01-01');
+            const today = new Date();
+            const daysSinceEpoch = Math.floor((today - epoch) / (1000 * 60 * 60 * 24));
+            const intentionIndex = daysSinceEpoch % masterIntentions.length;
+            dailyIntention = masterIntentions[intentionIndex];
 
-            const intentionIndex = Math.floor(Math.random() * availableIntentions.length);
-            const randomIntention = availableIntentions.splice(intentionIndex, 1)[0];
-            localStorage.setItem('availableIntentions', JSON.stringify(availableIntentions));
+            // 2. Get User's Daily Quote (random but stored for the day)
+            let storedQuoteData = null;
+            try {
+                storedQuoteData = JSON.parse(localStorage.getItem('dailyQuoteData'));
+            } catch (e) {
+                storedQuoteData = null;
+            }
 
-            quoteText.textContent = `"${randomQuote.text}"`;
-            quoteAuthor.textContent = randomQuote.author;
-            intentionText.textContent = randomIntention.text.replace(/\*\*/g, '');
+            if (storedQuoteData && storedQuoteData.date === todayString) {
+                dailyQuote = storedQuoteData.quote;
+            } else {
+                let availableQuotes = getListFromStorage('availableQuotes', masterQuotes);
+                if (availableQuotes.length === 0) {
+                    availableQuotes = [...masterQuotes]; // Reset if empty
+                }
 
-            if (randomIntention.link) {
-                intentionLink.href = randomIntention.link;
+                const quoteIndex = Math.floor(Math.random() * availableQuotes.length);
+                dailyQuote = availableQuotes.splice(quoteIndex, 1)[0];
+                
+                localStorage.setItem('dailyQuoteData', JSON.stringify({ quote: dailyQuote, date: todayString }));
+                localStorage.setItem('availableQuotes', JSON.stringify(availableQuotes));
+            }
+        }
+        
+        function displayContentInModals() {
+            if (!dailyQuote || !dailyIntention) return;
+
+            // Llenar modal "Para Meditar"
+            quoteText.textContent = `"${dailyQuote.text}"`;
+            quoteAuthor.textContent = dailyQuote.author;
+
+            // Llenar modal "Para Rezar"
+            intentionText.textContent = dailyIntention.text.replace(/\*\*/g, '');
+            if (dailyIntention.link) {
+                intentionLink.href = dailyIntention.link;
                 intentionLink.style.display = 'block';
                 rezarTitle.classList.add('pl-10');
             } else {
@@ -608,7 +637,9 @@
         function showResults() {
             bibleClosed.classList.add('hidden');
             bibleOpen.classList.remove('hidden');
-            generateContent();
+            loadDailyContent();
+            displayContentInModals();
+            
             initialView.classList.add('view-transition-out');
             setTimeout(() => {
                 initialView.classList.add('hidden');
@@ -687,4 +718,3 @@
     </script>
 </body>
 </html>
-
